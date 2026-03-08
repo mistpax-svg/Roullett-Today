@@ -3,135 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEO MEMO</title>
+    <title>오늘 뭐 - 스마트 룰렛</title>
     
-    <link rel="apple-touch-icon" href="./icon_clean.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="./icon_clean.png">
-    <link rel="shortcut icon" href="./icon_clean.png">
+    <link rel="apple-touch-icon" href="icon_clean.png"> <link rel="icon" href="icon_clean.png"> <meta name="apple-mobile-web-app-capable" content="yes"> <meta name="mobile-web-app-capable" content="yes"> <style>
+        body { font-family: 'Pretendard', sans-serif; display: flex; flex-direction: column; align-items: center; background: #f8f9fa; margin: 0; padding: 20px; overflow-x: hidden; }
+        
+        /* 설정 영역 */
+        .config { margin-bottom: 20px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; }
+        .config label { font-weight: bold; margin-right: 10px; font-size: 0.9rem; }
+        #sectionCount { width: 50px; padding: 8px; border: 2px solid #ff4757; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1rem; }
 
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="NEO MEMO">
-
-    <style>
-        :root {
-            --notebook-yellow: #fdf5b7;
-            --stripe-blue: #b9d5ec;
-            --line-height: 34px; 
-            --accent-gold: #e2d17c;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background-color: #dcdcdc;
-            display: flex;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        body {
-            align-items: flex-start;
-            padding-top: 40px;
-            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-        }
-
-        .notebook {
-            width: 92%;
-            max-width: 450px;
-            background-color: var(--notebook-yellow);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border-radius: 12px;
-            padding: 25px;
-            border-left: 12px solid var(--accent-gold);
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header-info {
-            font-size: 0.85rem;
-            color: #555;
-            margin-bottom: 12px;
-            border-bottom: 2px solid #edca82;
-            padding-bottom: 6px;
-            font-weight: 600;
-        }
-
-        .memo-area {
-            width: 100%;
-            height: 300px;
-            background-image: linear-gradient(var(--stripe-blue) 1px, transparent 1px);
-            background-size: 100% var(--line-height);
-            line-height: var(--line-height);
-            border: none;
-            outline: none;
-            resize: none;
-            background-color: transparent;
-            font-size: 19px;
-            color: #333;
-            overflow-y: auto;
-            padding: 0;
-            margin-top: 5px;
-        }
-
-        .save-btn {
-            width: 100%;
-            height: 55px;
-            margin-top: 20px;
-            background-color: #333333;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .save-btn:active {
-            background-color: #000;
-            transform: scale(0.98);
-        }
+        /* 동적 입력칸 영역 */
+        #inputs { display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 400px; }
+        .menu-input { width: 75px; padding: 10px; border: 2px solid #ddd; border-radius: 8px; text-align: center; outline: none; font-size: 0.9rem; transition: border-color 0.2s; }
+        .menu-input:focus { border-color: #ff4757; }
+        
+        /* 룰렛 디자인 */
+        .roulette-outer { position: relative; width: 320px; height: 320px; margin-top: 10px; }
+        .arrow { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); z-index: 10; font-size: 35px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
+        
+        #wheel { width: 100%; height: 100%; border-radius: 50%; border: 8px solid #333; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        
+        /* 초고속 회전 애니메이션 */
+        .spinning { animation: rotate 0.25s infinite linear; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        /* 컨트롤 버튼 */
+        .controls { margin-top: 35px; }
+        button { padding: 16px 60px; font-size: 1.3rem; font-weight: bold; cursor: pointer; background: #ff4757; color: white; border: none; border-radius: 50px; box-shadow: 0 5px 0 #cf3745; transition: 0.1s; -webkit-tap-highlight-color: transparent; }
+        button:active { transform: translateY(3px); box-shadow: 0 2px 0 #cf3745; }
+        
+        /* 결과 텍스트 */
+        #result { margin-top: 25px; font-size: 1.6rem; font-weight: 900; color: #ff4757; height: 1.6em; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="notebook">
-    <div class="header-info" id="current-time">시간 로딩 중...</div>
-    <textarea class="memo-area" id="memo-input" placeholder="메모를 입력하세요..." spellcheck="false"></textarea>
-    <button class="save-btn" onclick="sendToGmail()">기입</button>
-</div>
+    <h2>🎡 오늘 뭐?</h2>
 
-<script>
-    function updateDateTime() {
-        const now = new Date();
-        const options = { 
-            year: 'numeric', month: 'numeric', day: 'numeric', 
-            hour: '2-digit', minute: '2-digit', second: '2-digit', 
-            hour12: true 
-        };
-        document.getElementById('current-time').innerText = now.toLocaleString('ko-KR', options);
-    }
+    <div class="config">
+        <label for="sectionCount">섹션 수:</label>
+        <input type="number" id="sectionCount" value="4" min="2" max="12" oninput="initApp()">
+    </div>
+    
+    <div id="inputs"></div>
 
-    function sendToGmail() {
-        const content = document.getElementById('memo-input').value;
-        const timeInfo = document.getElementById('current-time').innerText;
+    <div class="roulette-outer">
+        <div class="arrow">▼</div>
+        <canvas id="wheel" width="500" height="500" class="spinning"></canvas>
+    </div>
 
-        if (!content.trim()) {
-            alert("내용을 입력해 주세요!");
-            return;
+    <div id="result"></div>
+
+    <div class="controls">
+        <button onclick="toggleSpin()" id="btn">STOP</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const inputContainer = document.getElementById('inputs');
+        const countInput = document.getElementById('sectionCount');
+        const btn = document.getElementById('btn');
+        const resultDiv = document.getElementById('result');
+        
+        const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#1A535C', '#FF9F43', '#A29BFE', '#FAB1A0', '#55E6C1', '#FD79A8', '#74B9FF', '#BADC58', '#686DE0'];
+        let isSpinning = true;
+
+        // 초기화: 입력창 개수 생성
+        function initApp() {
+            let count = parseInt(countInput.value);
+            if (count < 2) count = 2;
+            if (count > 12) count = 12;
+
+            inputContainer.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'menu-input';
+                input.placeholder = `항목 ${i + 1}`;
+                input.oninput = updateWheel; // 글자 입력 시 즉시 룰렛 업데이트
+                inputContainer.appendChild(input);
+            }
+            updateWheel();
         }
 
-        const subject = encodeURIComponent(`[NEO MEMO] ${timeInfo}`);
-        const body = encodeURIComponent(`작성시간: ${timeInfo}\n\n내용:\n${content}`);
-        window.location.href = `mailto:mistpax@gmail.com?subject=${subject}&body=${body}`;
-    }
+        // 룰렛 판 그리기
+        function updateWheel() {
+            const inputs = document.querySelectorAll('.menu-input');
+            const count = inputs.length;
+            const angle = (2 * Math.PI) / count;
+            
+            ctx.clearRect(0, 0, 500, 500);
+            
+            inputs.forEach((input, i) => {
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.moveTo(250, 250);
+                ctx.arc(250, 250, 250, i * angle, (i + 1) * angle);
+                ctx.fill();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.save();
+                ctx.translate(250, 250);
+                ctx.rotate(i * angle + angle / 2);
+                ctx.fillStyle = (i === 2 || i === 7) ? "#333" : "white"; // 밝은 배경색 대비
+                
+                // 텍스트 크기 자동 조절
+                const fontSize = count > 8 ? "20px" : "28px";
+                ctx.font = `bold ${fontSize} sans-serif`;
+                ctx.textAlign = "right";
+                ctx.fillText(input.value || (i + 1), 230, 10);
+                ctx.restore();
+            });
+        }
 
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
-</script>
+        // 회전 제어 (STOP / START)
+        function toggleSpin() {
+            if (isSpinning) {
+                // 멈출 때: 랜덤 각도로 강제 고정
+                const randomStopAngle = Math.floor(Math.random() * 360);
+                canvas.classList.remove('spinning');
+                canvas.style.transform = `rotate(${randomStopAngle}deg)`;
+                btn.innerText = "START";
+                showResult(randomStopAngle);
+            } else {
+                // 다시 돌리기
+                canvas.style.transform = "none";
+                canvas.classList.add('spinning');
+                btn.innerText = "STOP";
+                resultDiv.innerText = "";
+            }
+            isSpinning = !isSpinning;
+        }
+
+        // 결과 계산 및 표시
+        function showResult(angle) {
+            const count = parseInt(countInput.value);
+            // 캔버스 회전 각도 보정 (화살표가 위(270도)에 위치)
+            const actualAngle = (360 - (angle % 360) + 270) % 360;
+            const unitAngle = 360 / count;
+            const index = Math.floor(actualAngle / unitAngle) % count;
+            
+            const inputs = document.querySelectorAll('.menu-input');
+            const winningMenu = inputs[index].value || (index + 1);
+            resultDiv.innerText = `오늘의 픽: ${winningMenu}!`;
+        }
+
+        // 앱 구동 시작
+        initApp();
+    </script>
 </body>
 </html>
